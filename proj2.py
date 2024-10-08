@@ -71,34 +71,28 @@ def predict(X, weights, bias, activationFunc):
     netInput = np.dot(X, weights) + bias
     return np.array([activationFunc(x) for x in netInput])
 
-# Plot decision boundary and data points
-def plotting(X, y, weights, bias, activationFunc, title):
-    import matplotlib.pyplot as plt
-import numpy as np
 
-# Function to plot data and decision boundary
-def plot_decision_boundary(X, y, weights, bias, activationFunc, title):
+def plotting(X, y, weights, bias, activationFunc, title):
+
     plt.figure(figsize=(8, 6))
 
-    # Plot data points: small car (0) as red and big car (1) as blue
+    #plot data points: small car (0) as red and big car (1) as blue
     plt.scatter(X[y == 0][:, 0], X[y == 0][:, 1], color='red', label='Small Car (0)', alpha=0.7)
     plt.scatter(X[y == 1][:, 0], X[y == 1][:, 1], color='blue', label='Big Car (1)', alpha=0.7)
 
-    # Create decision boundary
+    #create decision boundary
     x_values = np.linspace(min(X[:, 0]) - 1, max(X[:, 0]) + 1, 200)
-    y_values = -(weights[0] * x_values + bias) / weights[1]  # Derived from w1*x1 + w2*x2 + bias = 0
+    y_values = -(weights[0] * x_values + bias) / weights[1]  #derived from w1*x1 + w2*x2 + bias = 0
 
-    # Plot the decision boundary
+    #decision boundary
     plt.plot(x_values, y_values, color='green', label='Decision Boundary', linewidth=2)
 
-    # Labels and title
-    plt.xlabel('Feature 1')
-    plt.ylabel('Feature 2')
+    plt.xlabel('cost in USD')
+    plt.ylabel('Weight in pounds (lbs)')
     plt.title(title)
     plt.legend(loc='best')
     plt.grid(True)
 
-    # Show plot
     plt.show()
 
 
@@ -107,60 +101,54 @@ from sklearn.metrics import confusion_matrix, accuracy_score
 
 # Evaluation function to calculate confusion matrices and accuracy
 def evalutation(xTrain, yTrain, xTest, yTest, weights, bias, activationFunc):
-    # Train set predictions
+    
     yPredTrain = activationFunc(np.dot(xTrain, weights) + bias)
-
-    # Test set predictions
     yPredTest = activationFunc(np.dot(xTest, weights) + bias)
 
-    # Apply threshold to convert continuous values to binary predictions (0 or 1)
+    
     yPredTrainBin = np.where(yPredTrain >= 0.5, 1, 0)
     yPredTestBin = np.where(yPredTest >= 0.5, 1, 0)
 
-    # Confusion matrices
-    conf_matrixTrain = confusion_matrix(yTrain, yPredTrainBin)
-    conf_matrixTest = confusion_matrix(yTest, yPredTestBin)
+    #confusion matrices
+    matrixTrain = confusion_matrix(yTrain, yPredTrainBin)
+    matrixTest = confusion_matrix(yTest, yPredTestBin)
 
-    # Accuracy scores
-    accuracyTrain = accuracy_score(yTrain, yPredTrainBin)
-    accuracyTest = accuracy_score(yTest, yPredTestBin)
+    #accuracy scores
+    accTrain = accuracy_score(yTrain, yPredTrainBin)
+    accTest = accuracy_score(yTest, yPredTestBin)
 
-    return conf_matrixTrain, conf_matrixTest, accuracyTrain, accuracyTest
+    return matrixTrain, matrixTest, accTrain, accTest
 
 
-def perceptron(file_path, activation, errorThreshold, alpha, gain=1):
+def perceptron(file_path, activationFunc,title, errorThreshold, alpha, gain=1):
     data = load_data(file_path)
     data = normalize(data)
     
-    # Split features and labels
-    X = data.iloc[:, :-1].values  # Features
-    y = data.iloc[:, -1].values.astype(int)   # Ensure labels are integers
+    #split features and labels
+    X = data.iloc[:, :-1].values
+    y = data.iloc[:, -1].values.astype(int) 
 
-    # 75% training, 25% testing
     xTrain, xTest, yTrain, yTest = splitData(X, y)
 
-    # Train perceptron
-    weights, bias = train(xTrain, yTrain, activation, errorThreshold=errorThreshold, alpha=alpha)
+    #train perceptron
+    weights, bias = train(xTrain, yTrain, activationFunc, errorThreshold=errorThreshold, alpha=alpha)
 
-    # Plot decision boundary
-    plotting(xTrain, yTrain, weights, bias, activation, 'Training Data Decision Boundary')
-    plotting(xTest, yTest, weights, bias, activation, 'Testing Data Decision Boundary')
+    plotting(xTrain, yTrain, weights, bias, activationFunc, title + ' (Train)')
+    plotting(xTest, yTest, weights, bias, activationFunc, title + ' (Test)')
 
-    # Evaluate model
-    conf_matrixTrain, conf_matrixTest, accuracyTrain, accuracyTest = evalutation(xTrain, yTrain, xTest, yTest, weights, bias, activation)
+    matrixTrain, matrixTest, accTrain, accTest = evalutation(xTrain, yTrain, xTest, yTest, weights, bias, activationFunc)
 
-    # Print results
-    print("Training Confusion Matrix:\n", conf_matrixTrain)
-    print("Testing Confusion Matrix:\n", conf_matrixTest)
-    print("Training Accuracy:", accuracyTrain)
-    print("Testing Accuracy:", accuracyTest)
+    print("Training Confusion Matrix:\n", matrixTrain)
+    print("Testing Confusion Matrix:\n", matrixTest)
+    print("Training Accuracy:", accTrain)
+    print("Testing Accuracy:", accTest)
 
 
-# Run for both hard and soft unipolar activation functions
+#run for both hard and soft unipolar activation functions
 file_path = 'groupB.txt'
 
-print("Hard Unipolar Activation Function")
-perceptron(file_path, hardUnipolarActivation, 40, alpha=0.05)
+print("Hard Unipolar Activation Function - Group B")
+perceptron(file_path, hardUnipolarActivation, 'Hard Unipolar Activation Function - Group B', 40, alpha=0.02)
 
-print("Soft Unipolar Activation Function")
-perceptron(file_path, softUnipolarActivation, 40, alpha=0.05, gain=1)
+print("Soft Unipolar Activation Function - Group B")
+perceptron(file_path, softUnipolarActivation, 'Soft Unipolar Activation Function - Group B', 40, alpha=0.02, gain=1)
