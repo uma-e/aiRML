@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.metrics import confusion_matrix, accuracy_score
+
+## Use by running python proj2.py
 
 def load_data(file_path):
     data = pd.read_csv(file_path, delimiter=',', header=None)
@@ -12,13 +12,15 @@ def load_data(file_path):
         print(f"Error converting labels to integers: {e}")
     return data
 
-
 def normalize(data):
     normDF = data.copy()
     for column in normDF.columns[:-1]:  
-        min = normDF[column].min()
-        max = normDF[column].max()
-        normDF[column] = (normDF[column] - min) / (max - min)
+        min_val = normDF[column].min()
+        max_val = normDF[column].max()
+        
+        normDF[column] = (normDF[column] - min_val) / (max_val - min_val)  
+        normDF[column] = normDF[column] * (0.5 - (-0.5)) + (-0.5)
+    
     return normDF
 
 #split data into training and testing sets
@@ -71,8 +73,7 @@ def predict(X, weights, bias, activationFunc):
     netInput = np.dot(X, weights) + bias
     return np.array([activationFunc(x) for x in netInput])
 
-
-def plotting(X, y, weights, bias, activationFunc, title):
+def plotting(X, y, weights, bias, title):
 
     plt.figure(figsize=(8, 6))
 
@@ -81,11 +82,14 @@ def plotting(X, y, weights, bias, activationFunc, title):
     plt.scatter(X[y == 1][:, 0], X[y == 1][:, 1], color='blue', label='Big Car (1)', alpha=0.7)
 
     #create decision boundary
-    x_values = np.linspace(min(X[:, 0]) - 1, max(X[:, 0]) + 1, 200)
-    y_values = -(weights[0] * x_values + bias) / weights[1]  #derived from w1*x1 + w2*x2 + bias = 0
+    xVals = np.linspace(min(X[:, 0]) - 1, max(X[:, 0]) + 1, 200)
+    yVals = -(weights[0] * xVals + bias) / weights[1]  
 
     #decision boundary
-    plt.plot(x_values, y_values, color='green', label='Decision Boundary', linewidth=2)
+    plt.plot(xVals, yVals, color='green', label='Decision Boundary', linewidth=2)
+
+    plt.xlim(-0.55, 0.55)
+    plt.ylim(-0.55, 0.55)
 
     plt.xlabel('cost in USD')
     plt.ylabel('Weight in pounds (lbs)')
@@ -95,29 +99,49 @@ def plotting(X, y, weights, bias, activationFunc, title):
 
     plt.show()
 
+def confMatrix(yTrue, yPred):
+    TP = TN = FP = FN = 0
 
-# Evaluate the perceptron model
-from sklearn.metrics import confusion_matrix, accuracy_score
+    for tLabel, pLabel in zip(yTrue, yPred):
+        if tLabel == 1 and pLabel == 1:
+            TP += 1
+        elif tLabel == 0 and pLabel == 0:
+            TN += 1
+        elif tLabel == 0 and pLabel == 1:
+            FP += 1
+        elif tLabel == 1 and pLabel == 0:
+            FN += 1
 
-# Evaluation function to calculate confusion matrices and accuracy
+    confusion_matrix = np.array([[TN, FP],
+                                 [FN, TP]])
+
+    accuracy = (TP + TN) / (TP + TN + FP + FN)
+
+    print('\n')
+    print(f"True Positives (TP): {TP}")
+    print(f"True Negatives (TN): {TN}")
+    print(f"False Positives (FP): {FP}")
+    print(f"False Negatives (FN): {FN}")
+
+    return confusion_matrix, accuracy
+
 def evalutation(xTrain, yTrain, xTest, yTest, weights, bias, activationFunc):
-    
     yPredTrain = activationFunc(np.dot(xTrain, weights) + bias)
+    yPredTrainBin = np.where(yPredTrain >= 0.5, 1, 0)  
+
     yPredTest = activationFunc(np.dot(xTest, weights) + bias)
+    yPredTestBin = np.where(yPredTest >= 0.5, 1, 0) 
 
+    print('\n')
+    print("Training Metrics:")
+    matrixTrain, accTrain = confMatrix(yTrain, yPredTrainBin)
     
-    yPredTrainBin = np.where(yPredTrain >= 0.5, 1, 0)
-    yPredTestBin = np.where(yPredTest >= 0.5, 1, 0)
+    print('\n')
+    print("\nTesting Metrics:")
+    matrixTest, accuracyTest = confMatrix(yTest, yPredTestBin)
 
-    #confusion matrices
-    matrixTrain = confusion_matrix(yTrain, yPredTrainBin)
-    matrixTest = confusion_matrix(yTest, yPredTestBin)
+    return matrixTrain, matrixTest, accTrain, accuracyTest
 
-    #accuracy scores
-    accTrain = accuracy_score(yTrain, yPredTrainBin)
-    accTest = accuracy_score(yTest, yPredTestBin)
-
-    return matrixTrain, matrixTest, accTrain, accTest
 
 
 def perceptron(file_path, activationFunc,title, errorThreshold, alpha, gain=1):
@@ -133,22 +157,39 @@ def perceptron(file_path, activationFunc,title, errorThreshold, alpha, gain=1):
     #train perceptron
     weights, bias = train(xTrain, yTrain, activationFunc, errorThreshold=errorThreshold, alpha=alpha)
 
-    plotting(xTrain, yTrain, weights, bias, activationFunc, title + ' (Train)')
-    plotting(xTest, yTest, weights, bias, activationFunc, title + ' (Test)')
+    plotting(xTrain, yTrain, weights, bias, title + ' (Train)')
+    plotting(xTest, yTest, weights, bias, title + ' (Test)')
 
     matrixTrain, matrixTest, accTrain, accTest = evalutation(xTrain, yTrain, xTest, yTest, weights, bias, activationFunc)
 
+    print('\n')
     print("Training Confusion Matrix:\n", matrixTrain)
     print("Testing Confusion Matrix:\n", matrixTest)
     print("Training Accuracy:", accTrain)
     print("Testing Accuracy:", accTest)
 
 
-#run for both hard and soft unipolar activation functions
+file_path = 'groupA.txt'
+
+print("\nHard Unipolar Activation Function - Group A")
+perceptron(file_path, hardUnipolarActivation, 'Hard Unipolar Activation Function - Group A', 1e-5, alpha=0.05)
+
+print("\nSoft Unipolar Activation Function - Group A")
+perceptron(file_path, softUnipolarActivation, 'Soft Unipolar Activation Function - Group A', 1e-5, alpha=0.05, gain=0.08)
+
+
 file_path = 'groupB.txt'
 
-print("Hard Unipolar Activation Function - Group B")
-perceptron(file_path, hardUnipolarActivation, 'Hard Unipolar Activation Function - Group B', 40, alpha=0.02)
+print("\nHard Unipolar Activation Function - Group B")
+perceptron(file_path, hardUnipolarActivation, 'Hard Unipolar Activation Function - Group B', 40, alpha=0.05)
 
-print("Soft Unipolar Activation Function - Group B")
-perceptron(file_path, softUnipolarActivation, 'Soft Unipolar Activation Function - Group B', 40, alpha=0.02, gain=1)
+print("\nSoft Unipolar Activation Function - Group B")
+perceptron(file_path, softUnipolarActivation, 'Soft Unipolar Activation Function - Group B', 40, alpha=0.05, gain=0.08)
+
+file_path = 'groupC.txt'
+
+print("\nHard Unipolar Activation Function - Group C")
+perceptron(file_path, hardUnipolarActivation, 'Hard Unipolar Activation Function - Group C', 700, alpha=0.01)
+
+print("\nSoft Unipolar Activation Function - Group C")
+perceptron(file_path, softUnipolarActivation, 'Soft Unipolar Activation Function - Group C', 700, alpha=0.01, gain=0.1)
