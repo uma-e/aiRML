@@ -24,7 +24,7 @@ def normalize(data):
     return normDF
 
 #split data into training and testing sets
-def splitData(X, y):
+def splitData(X, y, trainSize):
 
     #shuffling for randomness
     data = np.hstack((X, y.reshape(-1, 1)))
@@ -33,7 +33,7 @@ def splitData(X, y):
     shuffledX = data[:, :-1] #seperating shuffled data again
     shuffledY = data[:, -1]
 
-    splitIndex = int(len(X) * 0.75)
+    splitIndex = int(len(X) * trainSize)
     xTrain = shuffledX[:splitIndex]
     xTest = shuffledX[splitIndex:]
     yTrain = shuffledY[:splitIndex]
@@ -112,8 +112,8 @@ def confMatrix(yTrue, yPred):
         elif tLabel == 1 and pLabel == 0:
             FN += 1
 
-    confusion_matrix = np.array([[TN, FP],
-                                 [FN, TP]])
+    mtrx = np.array([[TN, FP],
+                    [FN, TP]])
 
     accuracy = (TP + TN) / (TP + TN + FP + FN)
 
@@ -123,28 +123,22 @@ def confMatrix(yTrue, yPred):
     print(f"False Positives (FP): {FP}")
     print(f"False Negatives (FN): {FN}")
 
-    return confusion_matrix, accuracy
+    return mtrx, accuracy
 
-def evalutation(xTrain, yTrain, xTest, yTest, weights, bias, activationFunc):
-    yPredTrain = activationFunc(np.dot(xTrain, weights) + bias)
-    yPredTrainBin = np.where(yPredTrain >= 0.5, 1, 0)  
+def evalutation(xTest, yTest, weights, bias, activationFunc):
 
     yPredTest = activationFunc(np.dot(xTest, weights) + bias)
     yPredTestBin = np.where(yPredTest >= 0.5, 1, 0) 
 
     print('\n')
-    print("Training Metrics:")
-    matrixTrain, accTrain = confMatrix(yTrain, yPredTrainBin)
-    
-    print('\n')
     print("\nTesting Metrics:")
     matrixTest, accuracyTest = confMatrix(yTest, yPredTestBin)
 
-    return matrixTrain, matrixTest, accTrain, accuracyTest
+    return matrixTest, accuracyTest
 
 
 
-def perceptron(file_path, activationFunc,title, errorThreshold, alpha, gain=1):
+def perceptron(file_path, activationFunc, title, trainSize, errorThreshold, alpha, gain=1):
     data = load_data(file_path)
     data = normalize(data)
     
@@ -152,7 +146,7 @@ def perceptron(file_path, activationFunc,title, errorThreshold, alpha, gain=1):
     X = data.iloc[:, :-1].values
     y = data.iloc[:, -1].values.astype(int) 
 
-    xTrain, xTest, yTrain, yTest = splitData(X, y)
+    xTrain, xTest, yTrain, yTest = splitData(X, y, trainSize)
 
     #train perceptron
     weights, bias = train(xTrain, yTrain, activationFunc, errorThreshold=errorThreshold, alpha=alpha)
@@ -160,36 +154,62 @@ def perceptron(file_path, activationFunc,title, errorThreshold, alpha, gain=1):
     plotting(xTrain, yTrain, weights, bias, title + ' (Train)')
     plotting(xTest, yTest, weights, bias, title + ' (Test)')
 
-    matrixTrain, matrixTest, accTrain, accTest = evalutation(xTrain, yTrain, xTest, yTest, weights, bias, activationFunc)
+    matrixTest, accTest = evalutation(xTest, yTest, weights, bias, activationFunc)
 
     print('\n')
-    print("Training Confusion Matrix:\n", matrixTrain)
     print("Testing Confusion Matrix:\n", matrixTest)
-    print("Training Accuracy:", accTrain)
     print("Testing Accuracy:", accTest)
 
+print('\n train size is 75%')
 
 file_path = 'groupA.txt'
 
 print("\nHard Unipolar Activation Function - Group A")
-perceptron(file_path, hardUnipolarActivation, 'Hard Unipolar Activation Function - Group A', 1e-5, alpha=0.05)
+perceptron(file_path, hardUnipolarActivation, 'Hard Unipolar Activation Function - Group A', 0.75, 1e-5, alpha=0.05)
 
 print("\nSoft Unipolar Activation Function - Group A")
-perceptron(file_path, softUnipolarActivation, 'Soft Unipolar Activation Function - Group A', 1e-5, alpha=0.05, gain=0.08)
+perceptron(file_path, softUnipolarActivation, 'Soft Unipolar Activation Function - Group A', 0.75, 1e-5, alpha=0.05, gain=0.08)
 
 
 file_path = 'groupB.txt'
 
 print("\nHard Unipolar Activation Function - Group B")
-perceptron(file_path, hardUnipolarActivation, 'Hard Unipolar Activation Function - Group B', 40, alpha=0.05)
+perceptron(file_path, hardUnipolarActivation, 'Hard Unipolar Activation Function - Group B', 0.75,  40, alpha=0.05)
 
 print("\nSoft Unipolar Activation Function - Group B")
-perceptron(file_path, softUnipolarActivation, 'Soft Unipolar Activation Function - Group B', 40, alpha=0.05, gain=0.08)
+perceptron(file_path, softUnipolarActivation, 'Soft Unipolar Activation Function - Group B', 0.75, 40, alpha=0.05, gain=0.08)
 
 file_path = 'groupC.txt'
 
 print("\nHard Unipolar Activation Function - Group C")
-perceptron(file_path, hardUnipolarActivation, 'Hard Unipolar Activation Function - Group C', 700, alpha=0.01)
+perceptron(file_path, hardUnipolarActivation, 'Hard Unipolar Activation Function - Group C', 0.75, 700, alpha=0.01)
 
 print("\nSoft Unipolar Activation Function - Group C")
-perceptron(file_path, softUnipolarActivation, 'Soft Unipolar Activation Function - Group C', 700, alpha=0.01, gain=0.1)
+perceptron(file_path, softUnipolarActivation, 'Soft Unipolar Activation Function - Group C', 0.75, 700, alpha=0.01, gain=0.1)
+
+print('\n train size is 25%')
+
+file_path = 'groupA.txt'
+
+print("\nHard Unipolar Activation Function - Group A")
+perceptron(file_path, hardUnipolarActivation, 'Hard Unipolar Activation Function - Group A', 0.25, 1e-5, alpha=0.05)
+
+print("\nSoft Unipolar Activation Function - Group A")
+perceptron(file_path, softUnipolarActivation, 'Soft Unipolar Activation Function - Group A', 0.25, 1e-5, alpha=0.05, gain=0.08)
+
+
+file_path = 'groupB.txt'
+
+print("\nHard Unipolar Activation Function - Group B")
+perceptron(file_path, hardUnipolarActivation, 'Hard Unipolar Activation Function - Group B', 0.25,  40, alpha=0.05)
+
+print("\nSoft Unipolar Activation Function - Group B")
+perceptron(file_path, softUnipolarActivation, 'Soft Unipolar Activation Function - Group B', 0.25, 40, alpha=0.05, gain=0.08)
+
+file_path = 'groupC.txt'
+
+print("\nHard Unipolar Activation Function - Group C")
+perceptron(file_path, hardUnipolarActivation, 'Hard Unipolar Activation Function - Group C', 0.25, 700, alpha=0.01)
+
+print("\nSoft Unipolar Activation Function - Group C")
+perceptron(file_path, softUnipolarActivation, 'Soft Unipolar Activation Function - Group C', 0.25, 700, alpha=0.01, gain=0.1)
