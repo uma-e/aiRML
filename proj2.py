@@ -99,6 +99,7 @@ def plotting(X, y, weights, bias, title):
 
     plt.show()
 
+
 def confMatrix(yTrue, yPred):
     TP = TN = FP = FN = 0
 
@@ -113,15 +114,24 @@ def confMatrix(yTrue, yPred):
             FN += 1
 
     mtrx = np.array([[TN, FP],
-                    [FN, TP]])
+                     [FN, TP]])
 
     accuracy = (TP + TN) / (TP + TN + FP + FN)
 
+    totalP = TP + FN  
+    totalN = TN + FP 
+
+    tpRate = TP / totalP if totalP > 0 else 0
+    tnRate = TN / totalN if totalN > 0 else 0
+    fpRate = FP / totalN if totalN > 0 else 0
+    fnRate = FN / totalP if totalP > 0 else 0
+
     print('\n')
-    print(f"True Positives (TP): {TP}")
-    print(f"True Negatives (TN): {TN}")
-    print(f"False Positives (FP): {FP}")
-    print(f"False Negatives (FN): {FN}")
+    print(f"True Positive Rate (TP): {tpRate:.4f}")
+    print(f"True Negative Rate (TN): {tnRate:.4f}")
+    print(f"False Positive Rate (FP): {fpRate:.4f}")
+    print(f"False Negative Rate (FN): {fnRate:.4f}")
+    print(f"Accuracy: {accuracy:.4f}")
 
     return mtrx, accuracy
 
