@@ -53,7 +53,7 @@ for wordCount in paragraphWordCounts:
 T = 25  #threshold for feature vec
 
 #generate feature vector by selecting words that appear at least T times across all paragraphs
-featureVec = [word for word, count in totalWordFreq.items() if count >= T]
+featureVec = [word for word, count in totalWordFreq.items() if count > T]
 
 print(f"Feature Vector (words with frequency > {T}):", featureVec)
 
