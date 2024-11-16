@@ -35,6 +35,7 @@ def wordStemmer(tokens):
 
 #extract frequency and create feature vector
 paragraphWordCounts = []
+i = 0
 for paragraph in paragraphs:
     cleanedParagraph = cleanText(paragraph)
     tokens = cleanedParagraph.split()  #further tokenize each paragraph into tokens
@@ -45,6 +46,8 @@ for paragraph in paragraphs:
     wordFreq = Counter(stemmedWords)
     paragraphWordCounts.append(wordFreq)
 
+
+
 #aggregate word counts across all paragraphs
 totalWordFreq = Counter()
 for wordCount in paragraphWordCounts:
@@ -52,10 +55,13 @@ for wordCount in paragraphWordCounts:
 
 T = 25  #threshold for feature vec
 
+
+#print(f"total frequency of each word:", totalWordFreq)
+
 #generate feature vector by selecting words that appear at least T times across all paragraphs
 featureVec = [word for word, count in totalWordFreq.items() if count > T]
 
-print(f"Feature Vector (words with frequency > {T}):", featureVec)
+#print(f"Feature Vector (words with frequency > {T}):", featureVec)
 
 tdm = []
 for wordCount in paragraphWordCounts:
@@ -64,4 +70,4 @@ for wordCount in paragraphWordCounts:
 
 tdm_df = pd.DataFrame(tdm, columns=featureVec)
 print("\nTerm Document Matrix (TDM):")
-display(tdm_df)
+#display(tdm_df)
